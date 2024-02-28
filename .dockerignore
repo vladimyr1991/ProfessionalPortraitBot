@@ -1,2 +1,3 @@
 src/config.py
 .venv/.dockerignore
+src/__pycache__
