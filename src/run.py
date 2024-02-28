@@ -3,11 +3,9 @@ import logging
 import sys
 
 from aiogram import Bot, Dispatcher
-import config
 from app.handlers import router
 from app.database.models import async_main
-
-TOKEN: str = config.TOKEN
+from app import TOKEN
 
 
 async def main():

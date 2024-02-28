@@ -1,13 +1,16 @@
+import os
+
 from sqlalchemy import BigInteger, ForeignKey, Enum, LargeBinary, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine
 import datetime as dt
 from . import OrderStatus
+import os
+
+SQLALCHEMY_URL: str = os.getenv("SQLALCHEMY_URL")
 
 
-import src.config as config
-
-engine = create_async_engine(config.SQLALCHEMY_URL, echo=True)
+engine = create_async_engine(SQLALCHEMY_URL, echo=True)
 
 
 class Base(AsyncAttrs, DeclarativeBase):
