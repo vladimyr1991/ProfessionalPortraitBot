@@ -17,8 +17,10 @@ build_image:
     - echo $REGISTRY_USER
     - echo $REGISTRY_PASSWORD
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
+    - export TOKEN=$TOKEN
+    - export SQLALCHEMY_URL=$SQLALCHEMY_URL
   script:
-    - docker compose build
+    - docker compose -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
 
 deploy:
