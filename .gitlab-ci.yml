@@ -12,4 +12,4 @@ build_image:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $IMAGE_REGISTRY
   script:
     - docker compose build
-    - docker push "$IMAGE_NAME":"$IMAGE_TAG"
+    - docker push $IMAGE_NAME:$IMAGE_TAG
