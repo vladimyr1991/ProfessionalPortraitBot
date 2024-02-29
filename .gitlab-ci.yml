@@ -5,9 +5,9 @@ variables:
 build_image:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
-  image: docker:19.03.12
+  image: docker:20.10.16
   services:
-    - docker:19.03.12-dind
+    - docker:20.10.16-dind
   before_script:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
   script:
