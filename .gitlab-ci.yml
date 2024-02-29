@@ -4,7 +4,7 @@ variables:
 
 build_image:
   variables:
-    DOCKER_TLS_CERTDIR:::wq "/certs"
+    DOCKER_TLS_CERTDIR:"/certs"
   image: docker:25.0.3-cli
   services:
     - docker:25.0.3-dind
