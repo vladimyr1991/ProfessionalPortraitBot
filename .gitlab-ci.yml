@@ -20,7 +20,7 @@ build_image:
     - export TOKEN=$TOKEN
     - export SQLALCHEMY_URL=$SQLALCHEMY_URL
   script:
-    - docker compose -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker built -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
 
 deploy:
