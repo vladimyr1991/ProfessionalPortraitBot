@@ -27,7 +27,7 @@ deploy:
     - echo "$SERVER_SSH_KEY" > ./deploy_key
     - chmod 400 ./deploy_key
   script:
-    - ssh -o StrictHostKeyChecking=no -i $SERVER_SSH_KEY vmoroz@130.193.51.46 "
+    - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       docker ps -aq | xargs docker stop | xargs docker rm &&
       docker run -d $IMAGE_NAME:$IMAGE_TAG"
