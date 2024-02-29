@@ -25,7 +25,7 @@ deploy:
   stage: deploy
   variables:
     TOKEN: $TOKEN
-    SQLALCHEMY: $SQLALCHEMY
+    SQLALCHEMY_URL: $SQLALCHEMY_URL
   before_script:
     - echo "$SERVER_SSH_KEY" > ./deploy_key
     - chmod 400 ./deploy_key
