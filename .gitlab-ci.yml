@@ -9,6 +9,8 @@ build_image:
   services:
     - docker:20.10.16-dind
   before_script:
+    - echo $REGISTRY_USER
+    - echo $REGISTRY_PASSWORD
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
   script:
     - docker compose build
