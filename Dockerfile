@@ -3,9 +3,7 @@ FROM python:3.11-slim
 LABEL authors="vmoroz"
 
 ENV PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.8.1 \
-    TOKEN=${TOKEN} \
-    SQLALCHEMY_URL=${SQLALCHEMY_URL}
+    POETRY_VERSION=1.8.1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl
