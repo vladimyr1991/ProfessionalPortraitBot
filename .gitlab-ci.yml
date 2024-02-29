@@ -9,7 +9,7 @@ build_image:
   services:
     - docker:19.03.12-dind
   before_script:
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD}
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
   script:
     - docker compose build
     - docker push $IMAGE_NAME:$IMAGE_TAG
