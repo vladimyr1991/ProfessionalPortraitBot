@@ -2,7 +2,12 @@ variables:
   IMAGE_NAME: vmoroza/portrait_photo
   IMAGE_TAG: tg-bot-1.0
 
+stages:
+  - build
+  - deploy
+
 build_image:
+  stage: build
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
   image: docker:20.10.16
@@ -15,3 +20,13 @@ build_image:
   script:
     - docker compose build
     - docker push $IMAGE_NAME:$IMAGE_TAG
+
+deploy:
+  stage: deploy
+  before_script:
+    - chmod 400 $SERVER_SSH_KEY
+  script:
+    - ssh -o StrictHostKeyChecking=no -i $SERVER_SSH_KEY vmoroz@130.193.51.46 "
+      docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
+      docekr ps -aq | xargs docker stop | xargs docekr rm &&
+      docker run -d $IMAGE_NAME:$IMAGE_TAG"
