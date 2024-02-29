@@ -28,6 +28,6 @@ deploy:
     - chmod 400 ./deploy_key
   script:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
-      docker login -u $REGISTRY_USER --password-stdin $REGISTRY_PASSWORD &&
-      docker ps -aq | xargs docker stop | xargs docker rm &&
-      docker run -d $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker login -u $REGISTRY_USER --password-stdin $REGISTRY_PASSWORD &&
+      sudo docker ps -aq | xargs sudo docker stop | xargs sudo docker rm &&
+      sudo docker run -d $IMAGE_NAME:$IMAGE_TAG"
