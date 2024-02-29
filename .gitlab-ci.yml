@@ -23,6 +23,9 @@ build_image:
 
 deploy:
   stage: deploy
+  variables:
+    TOKEN: $TOKEN
+    SQLALCHEMY: $SQLALCHEMY
   before_script:
     - echo "$SERVER_SSH_KEY" > ./deploy_key
     - chmod 400 ./deploy_key
@@ -30,6 +33,4 @@ deploy:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker ps -aq | xargs sudo docker stop | xargs sudo docker rm &&
-      echo 'TOKEN before export: $TOKEN' &&
-      echo 'SQLALCHEMY_URL before export: $SQLALCHEMY_URL' &&
       sudo docker run -e TOKEN='$TOKEN' -e SQLALCHEMY_URL='$SQLALCHEMY_URL' -d $IMAGE_NAME:$IMAGE_TAG"
