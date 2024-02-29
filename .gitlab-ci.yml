@@ -5,11 +5,11 @@ variables:
 build_image:
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
-  image: docker:25.0.3-cli
+  image: docker:25.0.3
   services:
     - docker:25.0.3-dind
   before_script:
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD $IMAGE_REGISTRY
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
   script:
     - docker compose build
     - docker push $IMAGE_NAME:$IMAGE_TAG
