@@ -20,4 +20,4 @@ COPY ./src /app
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-ansi
 
-CMD [ "python3", "/app/run.py"]
+CMD [ "python3", "/app/run.py",">","/app/logs.txt 2>&1"]
