@@ -32,4 +32,4 @@ deploy:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker ps -aq | xargs sudo docker stop | xargs sudo docker rm &&
-      sudo docker run -e TOKEN='{$TOKEN}' -e SQLALCHEMY_URL='{$SQLALCHEMY_URL}' -d $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run -e TOKEN='{$TOKEN}' -e SQLALCHEMY_URL='{$SQLALCHEMY_URL}' -it $IMAGE_NAME:$IMAGE_TAG"
