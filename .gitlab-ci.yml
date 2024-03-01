@@ -1,6 +1,8 @@
 variables:
   IMAGE_NAME: vmoroza/portrait_photo
   IMAGE_TAG: tg-bot-1.0
+  TOKEN: $TOKEN
+  SQLALCHEMY_URL: $SQLALCHEMY_URL
 
 stages:
   - build
@@ -23,9 +25,6 @@ build_image:
 
 deploy:
   stage: deploy
-  variables:
-    TOKEN: $TOKEN
-    SQLALCHEMY_URL: $SQLALCHEMY_URL
   before_script:
     - echo "$SERVER_SSH_KEY" > ./deploy_key
     - chmod 400 ./deploy_key
@@ -33,5 +32,4 @@ deploy:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker ps -aq | xargs sudo docker stop | xargs sudo docker rm &&
-      echo $TOKEN &&
-      sudo docker run -e TOKEN='$TOKEN' -e SQLALCHEMY_URL='$SQLALCHEMY_URL' -d $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run -e TOKEN='{$TOKEN}' -e SQLALCHEMY_URL='{$SQLALCHEMY_URL}' -d $IMAGE_NAME:$IMAGE_TAG"
