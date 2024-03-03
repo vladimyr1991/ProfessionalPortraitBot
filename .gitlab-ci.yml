@@ -20,7 +20,7 @@ build_image:
     - echo $REGISTRY_PASSWORD
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD
   script:
-    - docker build --build-arg TOKEN="$TOKEN" --build-arg SQLALCHEMY_URL="$SQLALCHEMY_URL" -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
     - docker push $IMAGE_NAME:$IMAGE_TAG
 
 deploy:
@@ -33,4 +33,4 @@ deploy:
     - export SQLALCHEMY_KEY="$SQLALCHEMY_KEY"
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
-      sudo docker run -e TOKEN=$TOKEN -e SQLALCHEMY_URL=$SQLALCHEMY_URL -d $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run -e TOKEN="$TOKEN" -e SQLALCHEMY_URL="$SQLALCHEMY_URL" -d $IMAGE_NAME:$IMAGE_TAG"
