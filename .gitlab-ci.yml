@@ -30,7 +30,6 @@ deploy:
     - chmod 400 ./deploy_key
   script:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
-      export TOKEN="$TOKEN" &&  export SQLALCHEMY_KEY="$SQLALCHEMY_KEY" &&
+      export TOKEN=\"$TOKEN\" &&  export SQLALCHEMY_KEY=\"$SQLALCHEMY_KEY\" &&
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
-      sudo docker run -e TOKEN="$TOKEN" -e SQLALCHEMY_URL="$SQLALCHEMY_URL" -dit $IMAGE_NAME:$IMAGE_TAG &&
-      sudo docker logs my_container"
+      sudo docker run -e TOKEN=\"\$TOKEN\" -e SQLALCHEMY_URL=\"\$SQLALCHEMY_URL\" -dit $IMAGE_NAME:$IMAGE_TAG"
