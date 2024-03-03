@@ -28,5 +28,6 @@ deploy:
     - chmod 400 ./deploy_key
   script:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
+      sudo docker rm photo_bot &&
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker run --name photo_bot -d $IMAGE_NAME:$IMAGE_TAG"
