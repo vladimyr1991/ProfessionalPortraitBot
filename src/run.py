@@ -8,7 +8,7 @@ from app.database.models import async_main
 import os
 
 TOKEN = os.getenv('TOKEN')
-if TOKEN is None:
+if TOKEN is None or TOKEN=="$TOKEN":
     logging.error(f'TOKEN is equal to {TOKEN}')
     raise ValueError('TOKEN is not specified')
 
