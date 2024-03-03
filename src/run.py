@@ -5,13 +5,16 @@ import sys
 from aiogram import Bot, Dispatcher
 from app.handlers import router
 from app.database.models import async_main
-from app import TOKEN
+import os
+
+TOKEN = os.getenv('TOKEN')
+if TOKEN is None:
+    logging.error(f'TOKEN is equal to {TOKEN}')
+    raise ValueError('TOKEN is not specified')
 
 
 async def main():
     await async_main()
-    logging.info("Starting bot..")
-    logging.info(f"Bot token: {TOKEN}")
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
     dp.include_router(router=router)
