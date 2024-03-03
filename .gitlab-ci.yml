@@ -1,8 +1,6 @@
 variables:
   IMAGE_NAME: vmoroza/portrait_photo
   IMAGE_TAG: tg-bot-1.0
-  TOKEN: $TOKEN
-  SQLALCHEMY_URL: $SQLALCHEMY_URL
 
 stages:
   - build
