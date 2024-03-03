@@ -10,6 +10,8 @@ from app import TOKEN
 
 async def main():
     await async_main()
+    logging.info("Starting bot..")
+    logging.info(f"Bot token: {TOKEN}")
     bot = Bot(token=TOKEN)
     dp = Dispatcher()
     dp.include_router(router=router)
