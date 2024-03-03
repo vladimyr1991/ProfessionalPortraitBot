@@ -33,4 +33,4 @@ deploy:
       export TOKEN=\"$TOKEN\" &&  export SQLALCHEMY_URL=\"$SQLALCHEMY_URL\" &&
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       echo $TOKEN && echo $SQLALCHEMY_KEY &&
-      sudo docker run --name photo_bot -e TOKEN=\"$TOKEN\" -e SQLALCHEMY_URL=\"$SQLALCHEMY_URL\" -dit $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run --name photo_bot -e TOKEN=\"$TOKEN\" -e SQLALCHEMY_URL=\"$SQLALCHEMY_URL\" -it $IMAGE_NAME:$IMAGE_TAG"
