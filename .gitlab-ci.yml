@@ -1,6 +1,6 @@
 variables:
   IMAGE_NAME: vmoroza/portrait_photo
-  IMAGE_TAG: tg-bot-1.0
+  IMAGE_TAG: tg-bot-1.1
 
 stages:
   - build
