@@ -29,4 +29,6 @@ deploy:
   script:
     - ssh -o StrictHostKeyChecking=no -i ./deploy_key vmoroz@130.193.51.46 "
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
+      sudo docker ps -aq | xargs sudo docker stop &&
+      sudo docker ps -aq | xargs sudo docker rm &&
       sudo docker run -d $IMAGE_NAME:$IMAGE_TAG"
