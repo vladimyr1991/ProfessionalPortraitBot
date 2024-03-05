@@ -1,8 +1,7 @@
-import os
-
-from sqlalchemy import BigInteger, ForeignKey, Enum, LargeBinary, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase, relationship
-from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine
+from sqlalchemy import BigInteger, ForeignKey, Enum, DateTime, Column, Integer, Boolean, LargeBinary, String
+from sqlalchemy.orm import Mapped, DeclarativeBase, relationship
+from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 import datetime as dt
 from . import OrderStatus
 import os
@@ -12,59 +11,54 @@ SQLALCHEMY_URL: str = os.getenv("SQLALCHEMY_URL")
 
 engine = create_async_engine(SQLALCHEMY_URL, echo=True)
 
+async_session = async_sessionmaker(
+    engine, expire_on_commit=False, class_=AsyncSession
+)
+
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(nullable=False)
-    telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    is_admin: Mapped[bool] = mapped_column(default=False)
-    registration_date: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False)
-
-    def __repr__(self) -> str:
-        return f"User(id={self.id}, email={self.email}, telegram_id={self.telegram_id}, is_admin={self.is_admin}), registration_date={self.registration_date}"
+    telegram_id: Mapped[int] = Column(Integer, primary_key=True, nullable=False, unique=True)
+    email: Mapped[str] = Column(Integer, nullable=False)
+    telegram_name: Mapped[str] = Column(String, nullable=False)
+    is_admin: Mapped[bool] = Column(Boolean, default=False)
+    registration_date: Mapped[dt.datetime] = Column(DateTime, nullable=False)
+    order = relationship("Order", back_populates="user")
 
 
-class RawPhotos(Base):
-    __tablename__ = "raw_photos"
+class Order(Base):
+    __tablename__ = "order"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    order_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('orders.id'), nullable=False)
-    image_data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)  # Storing binary data
-    creation_date: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False)
-    # Relationship to link back to the Orders table
-    order: Mapped['Orders'] = relationship("Orders", back_populates="raw_photos")
-
-
-class ProcessedPhotos(Base):
-    __tablename__ = "processed_photos"
-
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    order_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('orders.id'), nullable=False)
-    image_data: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)  # Storing binary data
-    creation_date: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False)
-
-    # Relationship to link back to the Orders table
-    order: Mapped['Orders'] = relationship("Orders", back_populates="processed_photos")
+    id: Mapped[int] = Column(Integer, primary_key=True, nullable=False, autoincrement=True)
+    user_id: Mapped[int] = Column(Integer, ForeignKey("user.telegram_id"))  # telegram_id atm
+    status: Mapped[OrderStatus] = Column(Enum(OrderStatus), nullable=False)
+    creation_date: Mapped[dt.datetime] = Column(DateTime, nullable=False)
+    user = relationship("User", back_populates="order")
+    raw_image = relationship("RawImage", back_populates="order")
+    processed_image = relationship("ProcessedImage", back_populates="order")
 
 
-class Orders(Base):
-    __tablename__ = "orders"
+class RawImage(Base):
+    __tablename__ = "raw_image"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    order_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    status: Mapped[OrderStatus] = mapped_column(Enum(OrderStatus), nullable=False)
-    creation_date: Mapped[dt.datetime] = mapped_column(DateTime, nullable=False)
-    users = relationship("Orders", back_populates="users")
-    # Relationships to link to the photo tables
-    raw_photos: Mapped[list['RawPhotos']] = relationship("RawPhotos", back_populates="order", cascade="all, delete-orphan")
-    processed_photos: Mapped[list['ProcessedPhotos']] = relationship("ProcessedPhotos", back_populates="order", cascade="all, delete-orphan")
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    order_id: Mapped[int] = Column(Integer, ForeignKey("order.id"))
+    image: Mapped[bytes] = Column(LargeBinary, nullable=False)
+    order = relationship("Order", back_populates="raw_image")
+
+
+class ProcessedImage(Base):
+    __tablename__ = "processed_image"
+
+    id: Mapped[int] = Column(Integer, primary_key=True, autoincrement=True)
+    order_id: Mapped[int] = Column(Integer, ForeignKey("order.id"))
+    image: Mapped[bytes] = Column(LargeBinary, nullable=False)
+    order = relationship("Order", back_populates="processed_image")
 
 
 async def async_main():

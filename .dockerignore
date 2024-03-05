@@ -1,3 +1,4 @@
 src/config.py
 .venv/.dockerignore
 src/__pycache__
+/src/app/database/db.sqlite3
