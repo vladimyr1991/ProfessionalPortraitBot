@@ -1,6 +1,6 @@
 src/config.py
 .venv
 /.env
-__pycache__/:wq
+__pycache__/
 /.env.*
 /src/app/database/db.sqlite3

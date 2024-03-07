@@ -31,4 +31,4 @@ deploy:
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker ps -aq | xargs sudo docker stop &&
       sudo docker ps -aq | xargs sudo docker rm &&
-      sudo docker run -d -v /home/vmoroz/database:/app/app/database  $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run -d -v /home/vmoroz/app/database/db.sqlite3:/app/app/database/db.sqlite3 $IMAGE_NAME:$IMAGE_TAG"
