@@ -7,8 +7,6 @@ VOLUME /app/app/database
 ARG TOKEN
 ARG SQLALCHEMY_URL
 
-RUN echo $TOKEN
-
 ENV PYTHONUNBUFFERED=1 \
     POETRY_VERSION=1.8.1 \
     TOKEN=${TOKEN} \
@@ -25,6 +23,8 @@ WORKDIR /app
 COPY pyproject.toml /app
 COPY poetry.lock /app
 COPY ./src /app
+
+
 
 RUN poetry config virtualenvs.create false
 RUN poetry install --no-dev --no-interaction --no-ansi
