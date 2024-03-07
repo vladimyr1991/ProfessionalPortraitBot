@@ -10,6 +10,18 @@ main = ReplyKeyboardMarkup(keyboard=[
     ])
 
 
+async def make_order_inline_kb():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(
+        InlineKeyboardButton(
+            text="Сгенерировать потрет",
+            callback_data="create_order"
+            )
+        )
+
+    return keyboard.as_markup()
+
+
 async def admin_inline_kb():
     button_1 = InlineKeyboardButton(text="Изменить статус заказа", callback_data='change_status')
     button_2 = InlineKeyboardButton(text="Загрузить обработанные фото", callback_data="upload_photo")
@@ -27,7 +39,7 @@ async def order_list_inline_kb(operation_type):
         raise ValueError("No orders")
     for order_id in orders_id:
         keyboard.add(
-            InlineKeyboardButton(text=f"Заказ №: {str(order_id)}", callback_data=f'order_{order_id}')
+            InlineKeyboardButton(text=f"Заказ: №{str(order_id)}", callback_data=f'{order_id}')
             )
     keyboard.add(
         InlineKeyboardButton(text="Назад", callback_data="return")
@@ -36,7 +48,7 @@ async def order_list_inline_kb(operation_type):
 
 
 async def status_list_inline_kb():
-    inline_keyboard = [[InlineKeyboardButton(text=status.value, callback_data=f'status_{status.name}')] for status in
+    inline_keyboard = [[InlineKeyboardButton(text=status.value, callback_data=f'{status.name}')] for status in
             [OrderStatus.PAYMENT_APPROVED, OrderStatus.PROCESSED_IMAGES_UPLOADED]]
     inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="return")])
 

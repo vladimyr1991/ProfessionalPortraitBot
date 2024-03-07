@@ -1,30 +1,30 @@
-from aiogram import Router, F, Bot
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import ReplyKeyboardRemove
-from aiogram.fsm.context import FSMContext
-from asyncio import Lock
-from . import keyboards as kb
-from .database import create_user, user_registered, create_order, OrderStatus, save_image, get_list_of_admin_users, update_order_status, get_order_by_telegram_id, get_amount_of_pictures_in_order
-from .database import ImageType
-from aiohttp import ClientSession
+import logging
 import os
 import re
-import logging
+from asyncio import Lock
+
 import sqlalchemy as sa
+from aiogram import Router, F, Bot
+from aiogram.filters import CommandStart, Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import Message, CallbackQuery
+from aiogram.types import ReplyKeyboardRemove
+from aiohttp import ClientSession
+
+from . import keyboards as kb
+from .database import ImageType
+from .database import create_user, user_registered, create_order, OrderStatus, save_image, get_list_of_admin_users, update_order_status, get_order_by_telegram_id, OrderStatus
 
 TOKEN: str = os.environ.get("TOKEN")
 order_creation_lock = Lock()
 
 router = Router()
 
-ADMIN_USERS = set()
-
 
 async def load_admin_users():
-    global ADMIN_USERS
-    ADMIN_USERS = await get_list_of_admin_users()
+    admin_users = await get_list_of_admin_users()
+    return admin_users
 
 
 async def get_photo(file_id: str, bot: Bot) -> bytes:
@@ -53,112 +53,20 @@ def is_email(email: str) -> bool:
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    # TODO:
-    # нужно сделать хорошее описание и добавить примеров фотографий
-    welcome_message = (
-        "🌟 Добро пожаловать в @ProfessionalPortraitBot, вашего помощника в создании деловых портретов! 🌟\n"
-        "С ProfessionalPortraitBot вы можете легко преобразовать свои фотографии в профессиональные деловые портреты.)\n" 
-        "Всё, что вам нужно, это:\n" 
-        "- загрузить своё фото\n"
-        "- оплатить услугу\n"
-        "- дождаться готовности и получить свои портреты\n"
-        "Повысьте свой профессиональный имидж с ProfessionalPortraitBot уже сегодня!\n"
-    )
-    await message.answer(welcome_message, reply_markup=kb.main)
+    welcome_message_1 = "🌟 Добро пожаловать в @ProfessionalPortraitBot, вашего помощника в создании деловых портретов! 🌟"
+    welcome_message_2 = ("Вы можете легко преобразовать свои фотографии в профессиональные деловые портреты. "
+                         "Не нужно тратить время на фотосессии. "
+                         "Просто проследуйте простой инструкции и получите ваши фотографии уже сегодня.")
 
-
-class CreateOrderForPortrait(StatesGroup):
-    order_id = State()
-    email = State()
-    photo_count = State()
-
-
-@router.message(F.text == "Заказать портрет")
-async def order_portrait(message: Message, state: FSMContext):
-    if not await user_registered(message.from_user.id):
-        await state.set_state(CreateOrderForPortrait.email)
-        await state.update_data(photo_count=0)
-        await message.answer("Вы у нас первый раз. Для продолжения авторизуйтесь", reply_markup=ReplyKeyboardRemove())
-        await message.answer("Введите ваш контактный email")
-    else:
-        await state.set_state(CreateOrderForPortrait.photo_count)
-        await message.answer(
-            text="Загрузите минимум 11 фотографий с вашим изображением через добавление фото.\nЧем лучше исходные фотографии тем лучше качество",
-            reply_markup=ReplyKeyboardRemove()
-            )
-
-
-@router.message(CreateOrderForPortrait.email)
-async def order_input_email(message: Message, state: FSMContext):
-    if not is_email(message.text):
-        await message.answer("Для продолжения введите корректный имейл.")
-    else:
-        await create_user(telegram_id=message.from_user.id, telegram_name=message.from_user.username, email=message.text)
-        await state.set_state(CreateOrderForPortrait.photo_count)
-        await message.answer("Загрузите минимум 11 фотографий с вашим изображением через добавление фото.\n\nЧем лучше исходные фотографии тем лучше качество")
-
-
-@router.message(CreateOrderForPortrait.photo_count)
-async def order_input_photo_count(message: Message, bot: Bot, state: FSMContext):
-    async with order_creation_lock:
-        data = await state.get_data()
-        try:
-            order = await get_order_by_telegram_id(telegram_id=message.from_user.id)
-        except sa.exc.MultipleResultsFound():
-            raise ValueError("Collision with orders. Can not exist two orders with the same status PREPARATION")
-        if order is None:
-            order = await create_order(
-                telegram_id=message.from_user.id,
-                order_status=OrderStatus.PREPARATION,
-                )
-            await state.update_data(order_id=order.id)
-            await state.set_state(CreateOrderForPortrait.photo_count)
-
-        file_id = message.photo[-1].file_id
-        image_binary = await get_photo(file_id=file_id, bot=bot)
-        counter = data.get("photo_count", 0)
-        await save_image(order_id=order.id, image_binary=image_binary, image_type=ImageType.RAW)
-        counter += 1
-        await state.update_data(photo_count=counter)
-
-        if counter < 3:
-            await message.answer(f"Загружена {counter} из минимума 11 фотографий. Продолжайте загружать")
-        else:
-            await state.update_data(order_id=order.id, photo_count=counter)
-            await state.set_state(CreateOrderForPortrait.photo_count)
-            await message.answer(f"Вы загрузили {counter} фотографии.")
-            await message.answer("Этого достаточно для начала обработки")
-            await message.answer("Вы можете продолжить загружать еще для лучшего результата.")
-            await message.answer( f"\nПо окончанию нажмите кнопку 'Завершить загрузку'", reply_markup=await kb.finish_upload_kb())
-
-
-@router.callback_query(CreateOrderForPortrait.photo_count)
-async def order_input_photo_finish(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    if callback.data == "finish_upload":
-        await state.clear()
-        await update_order_status(order_id=data.get('order_id'), order_status=OrderStatus.PAYMENT_APPROVAL_REQUIRED)
-        await callback.message.answer("Загрузка окончена.")
-        await callback.message.answer(f"Создана заявка №{data.get('order_id')}.")
-        await callback.message.answer(
-            f"\nПроизведите оплату через СБП в размере 5000 рублей по номеру +79116075951."
-            f"\nКак только оплата будет подтверждена ваша заявка будет подана на обработку и вы получите оповещение."
-        )
-
-
-@router.message(F.text == "/start")
-async def order_portrait(message: Message):
-    if not await user_registered(message.from_user.id):
-        await message.answer("Введите ваш контактный email")
-    else:
-        await message.answer("Загрузите 11 фотографий с вашим изображением через добавление фото.")
+    await message.answer(welcome_message_1)
+    await message.answer(text=welcome_message_2, reply_markup=await kb.make_order_inline_kb())
 
 
 @router.message(Command('admin'))
 async def admin_command(message: Message, bot: Bot):
-    await load_admin_users()
+    admin_users = await load_admin_users()
 
-    if message.from_user.id not in ADMIN_USERS:
+    if message.from_user.id not in admin_users:
         await message.answer("У вас нет прав для использования этой команды.")
     else:
         await bot.send_message(
@@ -180,14 +88,14 @@ async def admin_command(callback: CallbackQuery):
 
 class ChangeOrderState(StatesGroup):
     order_id = State()
-    state = State()
+    status = State()
 
 
 @router.callback_query(F.data == "change_status")
 async def admin_command(callback: CallbackQuery, state: FSMContext):
     await callback.answer("")
-    await load_admin_users()
-    if callback.from_user.id not in ADMIN_USERS:
+    admin_users = await load_admin_users()
+    if callback.from_user.id not in admin_users:
         await callback.message.answer("У вас нет прав для использования этой команды.")
     else:
         await callback.message.answer("Изменение статуса заказа")
@@ -201,17 +109,24 @@ async def admin_command(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(ChangeOrderState.order_id)
 async def admin_change_state_step_2(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(order_id=callback.message.text)
-    await state.set_state(ChangeOrderState.state)
+    order_id = callback.data
+    await state.update_data(order_id=order_id)
+    await state.set_state(ChangeOrderState.status)
     await callback.message.answer("Выберите новый статус", reply_markup=await kb.status_list_inline_kb())
 
 
-@router.callback_query(ChangeOrderState.state)
+@router.callback_query(ChangeOrderState.status)
 async def admin_change_state_step_3(callback: CallbackQuery, state: FSMContext):
     if callback.data != "return":
-        await state.update_data(state=callback.message.text)
         data = await state.get_data()
-        await callback.message.answer(f'Заказ  №{data.get("order_id")} переведен в статус {data.get("state")}')
+
+        status: OrderStatus = OrderStatus[callback.data]
+        order_id: int = data["order_id"]
+        await update_order_status(
+            order_id=order_id,
+            order_status=status
+            )
+        await callback.message.answer(f'Заказ  №{order_id} переведен в статус {status.value}')
         await state.clear()
     else:
         await callback.message.answer("Выберите новый статус", reply_markup=await kb.status_list_inline_kb())
@@ -226,8 +141,8 @@ class UploadProcessedPhotos(StatesGroup):
 @router.callback_query(F.data == "upload_photo")
 async def admin_upload_photos_step_1(callback: CallbackQuery, state: FSMContext):
     await callback.answer("")
-    await load_admin_users()
-    if callback.from_user.id not in ADMIN_USERS:
+    admin_users = await load_admin_users()
+    if callback.from_user.id not in admin_users:
         await callback.message.answer("У вас нет прав для использования этой команды.")
     else:
         await state.set_state(UploadProcessedPhotos.order_id)
@@ -261,3 +176,71 @@ async def admin_upload_photos_step_3(message: Message, bot: Bot, state: FSMConte
     else:
         await state.clear()  # Clear the state to conclude the image upload process
         await message.answer("Процесс загрузки фото завершен.")
+
+
+class CreateOrderForPortrait(StatesGroup):
+    order_id = State()
+    photo_count = State()
+    is_ready = State()
+
+
+@router.callback_query(F.data == "create_order")
+async def order_portrait(callback: CallbackQuery, state: FSMContext):
+    if not await user_registered(callback.from_user.id):
+        await create_user(
+            telegram_id=callback.from_user.id,
+            telegram_name=callback.from_user.username
+            )
+    await state.update_data(photo_count=0, upload_finished=False, is_ready=False)
+    await state.set_state(CreateOrderForPortrait.photo_count)
+    await callback.message.answer(
+        text=("Загрузите минимум 11 фотографий с вашим изображением через добавление фото."
+              "\nЧем лучше исходные фотографии тем лучше качество"),
+        reply_markup=ReplyKeyboardRemove()
+        )
+
+
+@router.message(CreateOrderForPortrait.photo_count)
+async def order_input_photo_count(message: Message, bot: Bot, state: FSMContext):
+    async with order_creation_lock:
+        await state.update_data(no_extra_data=False)
+        data = await state.get_data()
+        try:
+            order = await get_order_by_telegram_id(telegram_id=message.from_user.id)
+        except sa.exc.MultipleResultsFound():
+            raise ValueError("Collision with orders. Can not exist two orders with the same status PREPARATION")
+        if order is None:
+            order = await create_order(
+                telegram_id=message.from_user.id,
+                order_status=OrderStatus.PREPARATION,
+                )
+        await state.update_data(order_id=order.id)
+        image_binary = await get_photo(file_id=message.photo[-1].file_id, bot=bot)
+        await save_image(order_id=order.id, image_binary=image_binary, image_type=ImageType.RAW)
+        counter = data.get("photo_count", 0) + 1
+        await state.update_data(photo_count=counter)
+
+        if counter > 3 and not data.get("is_ready"):
+            await state.update_data(is_ready=True)
+            await state.set_state(CreateOrderForPortrait.order_id)
+            await message.answer(f"Вы загрузили {counter} фотографии.")
+            await message.answer("Этого достаточно для начала обработки")
+            await message.answer("Вы можете продолжить загружать еще для лучшего результата.")
+            await message.answer(
+                text=f"По окончанию нажмите кнопку 'Завершить загрузку'",
+                reply_markup=await kb.finish_upload_kb()
+                )
+
+
+@router.callback_query(CreateOrderForPortrait.order_id)
+async def order_input_photo_finish(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    if callback.data == "finish_upload":
+        await update_order_status(order_id=data.get('order_id'), order_status=OrderStatus.PAYMENT_APPROVAL_REQUIRED)
+        await state.clear()
+        await callback.message.answer("Загрузка окончена.")
+        await callback.message.answer(f"Создана заявка №{data.get('order_id')}.")
+        await callback.message.answer(
+            f"\nПроизведите оплату через СБП в размере 5000 рублей по номеру +79116075951."
+            f"\nКак только оплата будет подтверждена ваша заявка будет подана на обработку и вы получите оповещение."
+            )

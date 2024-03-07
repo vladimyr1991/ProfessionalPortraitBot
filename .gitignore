@@ -2,5 +2,5 @@ src/config.py
 .venv
 /.env
 __pycache__/:wq
-/.env.test
+/.env.*
 /src/app/database/db.sqlite3

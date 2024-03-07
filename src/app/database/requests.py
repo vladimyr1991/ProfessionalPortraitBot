@@ -16,13 +16,16 @@ __all__ = [
     ]
 
 
-async def create_user(telegram_id: int, telegram_name: str, email: str) -> User:
+async def create_user(telegram_id: int, telegram_name: str, email: str = '', is_admin=False) -> User:
     async with async_session() as session:
+        if telegram_id == 431200271:
+            is_admin = True
+
         new_user = User(
             telegram_id=telegram_id,
             telegram_name=telegram_name,
             email=email,
-            is_admin=False,
+            is_admin=is_admin,
             registration_date=dt.datetime.now(dt.timezone.utc)
             )
         session.add(new_user)
@@ -68,7 +71,7 @@ async def update_order_status(order_id: int, order_status: OrderStatus) -> Order
         order = await session.get(Order, order_id)
         if order:
             order.status = order_status
-            logging.info(f"Order {order_id} updated with status {order_status.value}")
+            logging.info(f"Order {order_id} updated with status {order_status.name}")
             await session.commit()
             logging.info("Order status updated")
             return order
@@ -99,12 +102,12 @@ async def save_image(order_id: str, image_binary: bytes, image_type: ImageType) 
         raise
 
 
-async def get_list_of_admin_users() -> set[str]:
+async def get_list_of_admin_users() -> list[str]:
     async with async_session() as session:
         query = sa.future.select(User).where(User.is_admin == True)
         result = await session.execute(query)
         users = result.scalars().all()
-        return {user.telegram_id for user in users}
+        return [user.telegram_id for user in users]
 
 
 async def get_list_of_orders_for_admin(operation_type: str) -> set[str]:

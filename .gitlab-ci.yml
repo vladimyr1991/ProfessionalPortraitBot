@@ -1,6 +1,6 @@
 variables:
   IMAGE_NAME: vmoroza/portrait_photo
-  IMAGE_TAG: tg-bot-1.1
+  IMAGE_TAG: tg-bot-1.2
 
 stages:
   - build
@@ -31,4 +31,4 @@ deploy:
       sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASSWORD &&
       sudo docker ps -aq | xargs sudo docker stop &&
       sudo docker ps -aq | xargs sudo docker rm &&
-      sudo docker run -d $IMAGE_NAME:$IMAGE_TAG"
+      sudo docker run -d $IMAGE_NAME:$IMAGE_TAG" -v /app/db.sqlite3:/app/app/database/db.sqlite3

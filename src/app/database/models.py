@@ -24,7 +24,7 @@ class User(Base):
     __tablename__ = "user"
 
     telegram_id: Mapped[int] = Column(Integer, primary_key=True, nullable=False, unique=True)
-    email: Mapped[str] = Column(Integer, nullable=False)
+    email: Mapped[str] = Column(Integer, nullable=True)
     telegram_name: Mapped[str] = Column(String, nullable=False)
     is_admin: Mapped[bool] = Column(Boolean, default=False)
     registration_date: Mapped[dt.datetime] = Column(DateTime, nullable=False)
