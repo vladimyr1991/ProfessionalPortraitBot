@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 LABEL authors="vmoroz"
 
-VOLUME /app/app/database/db.sqlite3
+VOLUME /app/app/database
 
 ARG TOKEN
 ARG SQLALCHEMY_URL
