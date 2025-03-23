@@ -7,6 +7,7 @@ from aiogram.types import CallbackQuery, Message
 
 from bot.keyboards.back_button import back_menu_kb
 from bot.keyboards.done_button import done_uploading_kb
+from bot.services.model_trainer import train_user_model_pipeline
 from bot.states.photo_session import PhotoSessionStates
 
 router = Router()
@@ -70,6 +71,7 @@ async def handle_unsupported_document(message: Message):
 async def debug_document_handler(message: Message):
     await message.answer(f"📄 Got document: {message.document.file_name}")
 
+
 @router.message(PhotoSessionStates.uploading_photos, F.photo)
 async def handle_uploaded_photo(message: Message, state: FSMContext):
     user_id = message.from_user.id
@@ -120,14 +122,33 @@ async def handle_uploaded_photo(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "finish_uploading")
 async def handle_finish_uploading(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    count = data.get("photo_count", 0)
+    user_id = callback.from_user.id
+    save_dir = f"media/{user_id}/raw_photos"
 
-    if count < 5:
-        await callback.message.answer(f"⚠️ You’ve uploaded only {count} photo(s). Please upload at least 5 for good results.")
+    # Check how many real photos exist
+    image_count = len([
+        f for f in os.listdir(save_dir)
+        if f.lower().endswith((".jpg", ".jpeg", ".png"))
+    ])
+
+    if image_count < 5:
+        await callback.message.answer(
+            f"⚠️ You’ve uploaded only {image_count} photo(s).\n"
+            "Please upload at least 5 for good results."
+        )
+        await callback.answer()
+        return
+
+    await callback.message.answer("🛠️ Starting your model training... please wait ⏳")
+    await state.clear()
+
+    # Call the actual training logic
+    success = await train_user_model_pipeline(user_id, save_dir)
+
+    if success:
+        await callback.message.answer("✅ Your model has been successfully trained! You can now generate images.")
+        # Optionally: Show "Generate with Prompt" button here
     else:
-        await callback.message.answer("🛠️ Creating your model... This might take a minute. Please wait ⏳")
-        # 🔧 Placeholder for model training logic
-        await state.clear()
+        await callback.message.answer("❌ Something went wrong during training. Please try again later.")
 
     await callback.answer()
