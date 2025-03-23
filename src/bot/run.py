@@ -4,7 +4,7 @@ import os
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from bot.handlers import start, free_prompting, photo_upload, back_to_menu, main_menu
+from bot.handlers import start, free_prompting, photo_upload, back_to_menu, main_menu, fallback
 from shared.errors import TelegramAPIKeyError
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -18,7 +18,7 @@ def register_handlers(dp: Dispatcher):
     dp.include_router(photo_upload.router)
     dp.include_router(back_to_menu.router)
     dp.include_router(main_menu.router)
-
+    dp.include_router(fallback.router)
 
 async def run():
     bot = Bot(token=BOT_TOKEN)
